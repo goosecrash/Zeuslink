@@ -1,18 +1,11 @@
-import asyncio
-import websockets
+import websocket_server
 
-async def main(websocket, path):
-    # This function will be called for each websocket connection that is established
-    message = await websocket.recv()  # receive a message from the client
-    print(f"Received message: {message}")
-    response = "Hello, client!"  # create a response to send back to the client
-    await websocket.send(response)  # send the response back to the client
+# Define a function to handle incoming messages
+def on_message(client, server, message):
+    print(f"received message from {client['address']}: {message}")
 
-# Set up the websocket server
-async def start_server():
-    server = await websockets.serve(main, '[Zeuslink].[goosecrash].[repl].[co]', 8000)
-    await server.wait_closed()
+# Create a websocket server
+server = websocket_server.WebSocketServer("0.0.0.0", 8000, on_message=on_message)
 
-# Run the websocket server in the event loop
-asyncio.get_event_loop().run_until_complete(start_server())
-asyncio.get_event_loop().run_forever()
+# Start the server
+server.run_forever()
