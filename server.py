@@ -1,11 +1,35 @@
-import websocket_server
+import asyncio
+import websockets
 
-# Define a function to handle incoming messages
-def on_message(client, server, message):
-    print(f"received message from {client['address']}: {message}")
+async def main():
+    # Connect to the websocket server
+    uri = "[Zeuslink].[goosecrash].[repl].[co]"
+    async with websockets.connect(uri) as websocket:
+        # Send a message to the server
+        message = "Hello from the client!"
+        await websocket.send(message)
+        print(f'Sent message: {message}')
 
-# Create a websocket server
-server = websocket_server.WebSocketServer("0.0.0.0", 8000, on_message=on_message)
+        # Receive the response from the server
+        response = await websocket.recv()
+        print(f'Received response: {response}')
 
-# Start the server
-server.run_forever()
+# Run the main function
+asyncio.run(main())
+
+async def handle_connection(websocket, path):
+    print("Client connected")  # Print a confirmation message
+
+    # Send the server confirmation message to the client
+    confirmation_message = "Welcome to zeuslink\nNumber of CPUs: {}\nThe current time is: {}".format(num_cpus, time_str)
+    await websocket.send(confirmation_message)
+
+    # Process incoming message
+    message = await websocket.recv()
+    print(f'Received message: {message}')
+
+    # Run the main function and get the result
+    result = main()
+
+    # Send the result back to the client
+    await websocket.send(result)

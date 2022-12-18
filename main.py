@@ -2,7 +2,25 @@ import random
 import os
 import dotenv
 from cryptography.fernet import Fernet
+import psutil
+from tqdm import tqdm
+import os
+from multiprocessing import cpu_count
+from multiprocessing import Pool
+import time
+import ecdsa
+import datetime
+import json
 
+
+
+
+
+
+
+num_cpus = os.cpu_count()
+now = datetime.datetime.now()
+time_str = now.strftime("%I:%M %p")
 # Declare variables and functions outside of the while loop to avoid
 # recreating them every iteration
 operations = ['+', '-', '*', '/']  # list of possible operations
@@ -15,6 +33,14 @@ if not os.path.exists('key.bin') or not os.path.exists('wallet.bin'):
     # Generate a new key for the Fernet algorithm
     key = Fernet.generate_key()
     fernet = Fernet(key)
+    sk = ecdsa.SigningKey.generate(curve=ecdsa.NIST256p)
+    vk = sk.get_verifying_key()
+    public_key = vk.to_string()
+    # Write the key to key.bin
+    with open('public_key.bin', 'wb') as f:
+        f.write(public_key)
+
+  
 
     # Write the key to key.bin
     with open('key.bin', 'wb') as f:
@@ -38,7 +64,9 @@ if os.path.exists('wallet.bin'):
     with open('wallet.bin', 'rb') as f:
         encrypted_balance = f.read()
         decrypted_balance = fernet.decrypt(encrypted_balance).decode()
-        balance = (decrypted_balance)
+        balance = int(decrypted_balance)
+
+
 
 def main():
     # Choose X and Y outside of the if statement to avoid
@@ -60,37 +88,30 @@ def main():
     Space1 = " "
     mid = f"{X} {operation} {Y}"  # use f-strings to create the equation string
     print("Welcome to zeuslink")
-    MainMenu = input('Press 1 to login or 2 to exit Press 3 for balance: ')
+    print(f'Number of CPUs: {num_cpus}')
+    print(f'The current time is: {time_str}')
+    MainMenu = input('''Press 1 to login or 2 to exit Press 3 for balance: ''')
 
     if MainMenu == '1':
         # Generate and solve the equation as before
-        Answer = input(f"{Quest1} {Space1} {mid} {Space1} {Quest2}")
-        # Get user input and convert it to an integer
-        # Compare Answer to Z and increment balance if correct
-        if Answer == Z:
-            print("Mined a block")
-            global balance
+        (Answer) = input(f"{Quest1} {Space1} {mid} {Space1} {Quest2}")
+        if  int(Answer) == Z:
+            global balance 
             balance += 5
-            print(f'Your balance is: ${balance}')
-        else:
-            print("error,block not rewarded")
-  
-        # Handle ValueError if user input cannot be converted to an integer
-        print("Invalid input. Answer must be an integer.")
+            for i in tqdm(range(100)):
+                time.sleep(1)
+            print("mined a block")
+            encrypted_balance = fernet.encrypt(str(balance).encode())
+            with open('wallet.bin', 'wb') as f:
+                f.write(encrypted_balance)
+            print("balance: " + str(balance))
+            print("Balance updated to wallet.bin file")
+       
     elif MainMenu == '2':
-        # Save balance to wallet.bin
-        encrypted_balance = fernet.encrypt(str(balance).encode())
-        with open('wallet.bin', 'wb') as f:
-            f.write(encrypted_balance)
-        print("Balance saved to wallet")
-        return  # Return from the main() function to exit the while loop
-    elif MainMenu == '3':
-        print("https://github.com/goosecrash/zeuslink2/tree/main/README.md")
-        return  # Return from the main() function to exit the while loop
-    elif MainMenu == '4':  # new menu option to print balance
-        print(f'Your balance is: ${balance:.0f}')
-        return  # Return from the main() function to exit the while loop
-
-# Main loop
+        print("You have " + str(balance) + " coins")
+        print("Exiting program. Balance was saved to wallet.bin file")
+    
+        exit()
 while True:
-    main()
+  main()
+  
